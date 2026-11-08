@@ -58,4 +58,12 @@ export const ROUND_CONFIGS: RoundConfig[] = [
 ];
 
 export const TIME_BONUS_MULTIPLIER = 10;
-export const MAX_SCORE = 2500;
+
+export function getMaxScoreForRound(round: number): number {
+  return ROUND_CONFIGS.slice(0, round).reduce(
+    (sum, config) => sum + config.correctScore + Math.floor(config.timeLimit * TIME_BONUS_MULTIPLIER),
+    0,
+  );
+}
+
+export const MAX_SCORE = getMaxScoreForRound(ROUNDS_COUNT);

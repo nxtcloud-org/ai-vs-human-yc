@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLeaderboard, addLeaderboardEntry } from '@/lib/leaderboard';
+import { parseLeaderboardEntry } from '@/lib/validation';
 
 export async function GET() {
   try {
@@ -14,19 +15,20 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  let body: unknown;
   try {
-    const body = await request.json();
-    const { nickname, score, round } = body;
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+  }
 
-    if (!nickname || typeof score !== 'number' || score < 0 || score > 3000) {
-      return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
-    }
+  const input = parseLeaderboardEntry(body);
+  if (!input) {
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+  }
 
-    const { rank } = await addLeaderboardEntry({
-      nickname: String(nickname).slice(0, 10),
-      score,
-      round: typeof round === 'number' ? round : 4,
-    });
+  try {
+    const { rank } = await addLeaderboardEntry(input);
 
     return NextResponse.json({ success: true, rank });
   } catch (error) {
